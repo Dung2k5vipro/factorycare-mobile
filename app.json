@@ -1,4 +1,7 @@
 {
-  "name": "MobileApp",
-  "displayName": "QLSC Mobile"
+  "expo": {
+    "name": "FactoryCare",
+    "slug": "factorycare-mobile",
+    "version": "1.0.0"
+  }
 }
