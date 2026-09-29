@@ -83,22 +83,23 @@ export function themAnhVaoFormData(
 }
 
 function layThongBaoLoi(maTrangThai: number, thongBao?: string) {
+  if (thongBao) return thongBao;
   switch (maTrangThai) {
     case 401:
       return 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
     case 403:
       return 'Bạn không có quyền thực hiện thao tác này.';
     case 404:
-      return 'Không tìm thấy dữ liệu.';
+      return 'Không tìm thấy máy chủ hoặc đường dẫn API (404).';
     case 409:
-      return (
-        thongBao ??
-        'Dữ liệu đang ở trạng thái không thể thực hiện thao tác này.'
-      );
+      return 'Dữ liệu đang ở trạng thái không thể thực hiện thao tác này.';
     case 422:
-      return thongBao ?? 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.';
     case 400:
-      return thongBao ?? 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.';
+      return 'Dữ liệu chưa hợp lệ. Vui lòng kiểm tra lại.';
+    case 502:
+    case 503:
+    case 504:
+      return `Máy chủ hoặc đường truyền trung gian (Tunnel) đang không khả dụng (${maTrangThai}). Vui lòng kiểm tra backend hoặc cập nhật URL API.`;
     default:
       return 'Có lỗi xảy ra. Vui lòng thử lại.';
   }
@@ -127,6 +128,7 @@ async function goiApiTaiAnh<T>(
 
     const headers = new Headers(tuyChon.headers);
     headers.set('Accept', 'application/json');
+    headers.set('Bypass-Tunnel-Reminder', 'true');
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
@@ -138,16 +140,19 @@ async function goiApiTaiAnh<T>(
 
     yeuCau.onload = () => {
       let noiDung: Record<string, unknown> = {};
+      let laJsonHopLe = true;
       try {
         noiDung = yeuCau.responseText ? JSON.parse(yeuCau.responseText) : {};
       } catch {
-        reject(
-          new LoiApi('Máy chủ trả về dữ liệu không hợp lệ. Vui lòng thử lại.'),
-        );
-        return;
+        laJsonHopLe = false;
       }
 
-      if (yeuCau.status < 200 || yeuCau.status >= 300 || noiDung.thanhCong === false) {
+      if (
+        yeuCau.status < 200 ||
+        yeuCau.status >= 300 ||
+        !laJsonHopLe ||
+        noiDung.thanhCong === false
+      ) {
         if (yeuCau.status === 401 && !tuyChon.boQuaXacThuc) {
           xuLyHetHan?.();
         }
@@ -203,6 +208,7 @@ export async function goiApi<T>(duongDan: string, tuyChon: TuyChonYeuCau = {}) {
     const token = tuyChon.boQuaXacThuc ? null : await layToken();
     const headers = new Headers(tuyChon.headers);
     headers.set('Accept', 'application/json');
+    headers.set('Bypass-Tunnel-Reminder', 'true');
     if (!laFormData && tuyChon.body !== undefined) {
       headers.set('Content-Type', 'application/json');
     }
@@ -220,9 +226,15 @@ export async function goiApi<T>(duongDan: string, tuyChon: TuyChonYeuCau = {}) {
       signal: boDieuKhien.signal,
     });
     const vanBan = await phanHoi.text();
-    const noiDung = vanBan ? JSON.parse(vanBan) : {};
+    let noiDung: Record<string, unknown> = {};
+    let laJsonHopLe = true;
+    try {
+      noiDung = vanBan ? JSON.parse(vanBan) : {};
+    } catch {
+      laJsonHopLe = false;
+    }
 
-    if (!phanHoi.ok || noiDung.thanhCong === false) {
+    if (!phanHoi.ok || !laJsonHopLe || noiDung.thanhCong === false) {
       if (phanHoi.status === 401 && !tuyChon.boQuaXacThuc) {
         xuLyHetHan?.();
       }
@@ -232,10 +244,18 @@ export async function goiApi<T>(duongDan: string, tuyChon: TuyChonYeuCau = {}) {
           : tuyChon.boQuaXacThuc && phanHoi.status === 403
           ? 'Tài khoản không thể đăng nhập. Vui lòng liên hệ quản trị viên.'
           : undefined;
+
+      const thongBao =
+        thongBaoDangNhap ??
+        layThongBaoLoi(
+          phanHoi.status,
+          typeof noiDung.thongBao === 'string' ? noiDung.thongBao : undefined,
+        );
+
       throw new LoiApi(
-        thongBaoDangNhap ?? layThongBaoLoi(phanHoi.status, noiDung.thongBao),
+        thongBao,
         phanHoi.status,
-        noiDung.loi ?? noiDung.loiTruong,
+        (noiDung.loi ?? noiDung.loiTruong) as Record<string, string> | undefined,
       );
     }
 
