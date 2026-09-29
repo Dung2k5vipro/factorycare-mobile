@@ -83,7 +83,7 @@ export function ScanQrScreen({ navigation }: Props) {
       } catch (loi) {
         setLoiQuet(
           layThongBaoAnToan(loi) === 'Không tìm thấy dữ liệu.'
-            ? 'Không tìm thấy thiết bị.'
+            ? 'Mã QR không thuộc hệ thống FactoryCare.'
             : layThongBaoAnToan(loi),
         );
       } finally {

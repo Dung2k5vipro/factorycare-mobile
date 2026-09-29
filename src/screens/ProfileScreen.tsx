@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Image, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NavigationProp } from '@react-navigation/native';
 import { KeyRound, LogOut, UserRound } from 'lucide-react-native';
@@ -13,14 +13,19 @@ import type {
   ThamSoDieuHuongGoc,
   ThamSoTabNhanVien,
 } from '../navigation/types';
+import { taoDiaChiTaiNguyen } from '../services/apiClient';
 
 type Props = BottomTabScreenProps<ThamSoTabNhanVien, 'TaiKhoan'>;
 
 export function ProfileScreen({ navigation }: Props) {
   const { nguoiDung, dangXuat } = useAuth();
   const [dangDangXuat, setDangDangXuat] = useState(false);
+  const [coLoiAnhDaiDien, setCoLoiAnhDaiDien] = useState(false);
   const dieuHuongGoc =
     navigation.getParent<NavigationProp<ThamSoDieuHuongGoc>>();
+  const tenVaiTro =
+    nguoiDung?.vaiTro === 'KY_THUAT_VIEN' ? 'Kỹ thuật viên' : 'Nhân viên';
+  const diaChiAnhDaiDien = taoDiaChiTaiNguyen(nguoiDung?.anhDaiDien);
 
   function xuLyYeuCauDangXuat() {
     Alert.alert('Đăng xuất', 'Bạn có chắc muốn đăng xuất?', [
@@ -49,11 +54,19 @@ export function ProfileScreen({ navigation }: Props) {
         />
         <View style={styles.daiDien}>
           <View style={styles.anhDaiDien}>
-            <UserRound color={mauSac.chinh} size={36} />
+            {diaChiAnhDaiDien && !coLoiAnhDaiDien ? (
+              <Image
+                source={{ uri: diaChiAnhDaiDien }}
+                style={styles.anh}
+                onError={() => setCoLoiAnhDaiDien(true)}
+              />
+            ) : (
+              <UserRound color={mauSac.chinh} size={36} />
+            )}
           </View>
           <View style={styles.tenNguoiDung}>
             <Text style={styles.hoTen}>{nguoiDung?.hoTen}</Text>
-            <Text style={styles.vaiTro}>Nhân viên</Text>
+            <Text style={styles.vaiTro}>{tenVaiTro}</Text>
           </View>
         </View>
         <View style={styles.theThongTin}>
@@ -65,7 +78,7 @@ export function ProfileScreen({ navigation }: Props) {
           {nguoiDung?.boPhan ? (
             <DongThongTin nhan="Bộ phận" noiDung={nguoiDung.boPhan} />
           ) : null}
-          <DongThongTin nhan="Vai trò" noiDung="Nhân viên" />
+          <DongThongTin nhan="Vai trò" noiDung={tenVaiTro} />
         </View>
         <View style={styles.hanhDong}>
           <NutChinh
@@ -107,7 +120,9 @@ const styles = StyleSheet.create({
     backgroundColor: mauSac.chinhNhat,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  anh: { width: '100%', height: '100%' },
   tenNguoiDung: { flex: 1, gap: 4 },
   hoTen: { color: mauSac.chuChinh, fontSize: 19, fontWeight: '800' },
   vaiTro: { color: mauSac.chuPhu, fontSize: 14 },

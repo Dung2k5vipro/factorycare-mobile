@@ -1,10 +1,11 @@
 import type {
   DanhSachPhanTrang,
+  AnhDaChon,
   MucDoSuCo,
   SuCo,
   TrangThaiSuCo,
 } from '../types';
-import { goiApi } from './apiClient';
+import { goiApi, themAnhVaoFormData } from './apiClient';
 
 export interface BoLocSuCo {
   trang?: number;
@@ -40,7 +41,22 @@ export interface DuLieuTaoSuCo {
   hinhAnh?: string[];
 }
 
-export function taoSuCo(duLieuTao: DuLieuTaoSuCo) {
+export function taoSuCo(
+  duLieuTao: DuLieuTaoSuCo,
+  danhSachAnh: AnhDaChon[] = [],
+) {
+  if (danhSachAnh.length) {
+    const formData = new FormData();
+    formData.append('thietBiId', String(duLieuTao.thietBiId));
+    formData.append('tieuDe', duLieuTao.tieuDe);
+    formData.append('moTa', duLieuTao.moTa);
+    formData.append('mucDo', duLieuTao.mucDo);
+    if (duLieuTao.thoiGianXayRa) {
+      formData.append('thoiGianXayRa', duLieuTao.thoiGianXayRa);
+    }
+    themAnhVaoFormData(formData, 'hinhAnh', danhSachAnh);
+    return goiApi<SuCo>('/su-co', { method: 'POST', body: formData });
+  }
   return goiApi<SuCo>('/su-co', {
     method: 'POST',
     body: duLieuTao,

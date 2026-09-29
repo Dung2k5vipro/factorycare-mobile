@@ -3,15 +3,17 @@ import { StyleSheet, Text, View } from 'react-native';
 import { boGoc } from '../constants/theme';
 import {
   layMauMucDo,
+  layMauTrangThaiBaoTri,
   layMauTrangThaiSuCo,
   layMauTrangThaiThietBi,
   layNhanMucDo,
+  layNhanTrangThaiBaoTri,
   layNhanTrangThaiSuCo,
   layNhanTrangThaiThietBi,
 } from '../utils/dinhDang';
 
 interface HuyHieuProps {
-  loai: 'thietBi' | 'suCo' | 'mucDo';
+  loai: 'thietBi' | 'suCo' | 'mucDo' | 'baoTri';
   giaTri?: string;
 }
 
@@ -21,12 +23,16 @@ export function HuyHieu({ loai, giaTri }: HuyHieuProps) {
       ? layMauTrangThaiThietBi(giaTri)
       : loai === 'suCo'
       ? layMauTrangThaiSuCo(giaTri)
+      : loai === 'baoTri'
+      ? layMauTrangThaiBaoTri(giaTri)
       : layMauMucDo(giaTri);
   const nhan =
     loai === 'thietBi'
       ? layNhanTrangThaiThietBi(giaTri)
       : loai === 'suCo'
       ? layNhanTrangThaiSuCo(giaTri)
+      : loai === 'baoTri'
+      ? layNhanTrangThaiBaoTri(giaTri)
       : layNhanMucDo(giaTri);
 
   return (

@@ -53,7 +53,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           return;
         }
         const nguoiDungDaLuu = await layNguoiDungHienTai();
-        if (nguoiDungDaLuu.vaiTro !== 'NHAN_VIEN') {
+        if (!['NHAN_VIEN', 'KY_THUAT_VIEN'].includes(nguoiDungDaLuu.vaiTro)) {
           await xoaToken();
           return;
         }
@@ -69,8 +69,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   const dangNhap = useCallback(async (email: string, matKhau: string) => {
     const ketQua = await goiDangNhap(email, matKhau);
-    if (ketQua.nguoiDung.vaiTro !== 'NHAN_VIEN') {
-      throw new Error('Tài khoản này không thuộc vai trò Nhân viên.');
+    if (!['NHAN_VIEN', 'KY_THUAT_VIEN'].includes(ketQua.nguoiDung.vaiTro)) {
+      throw new Error('Tài khoản này không được sử dụng ứng dụng Mobile.');
     }
     if (ketQua.nguoiDung.trangThai === 'NGUNG_HOAT_DONG') {
       throw new Error(

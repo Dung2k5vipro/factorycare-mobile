@@ -9,25 +9,40 @@ import {
   ClipboardList,
   House,
   QrCode,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react-native';
 import { boGoc, mauSac } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
 import { ChangePasswordScreen } from '../screens/ChangePasswordScreen';
+import { CompleteRepairScreen } from '../screens/CompleteRepairScreen';
 import { CreateIncidentScreen } from '../screens/CreateIncidentScreen';
 import { DeviceDetailScreen } from '../screens/DeviceDetailScreen';
 import { EmployeeHomeScreen } from '../screens/EmployeeHomeScreen';
 import { IncidentDetailScreen } from '../screens/IncidentDetailScreen';
 import { IncidentSuccessScreen } from '../screens/IncidentSuccessScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { MaintenanceDetailScreen } from '../screens/MaintenanceDetailScreen';
+import { MaintenanceExecutionScreen } from '../screens/MaintenanceExecutionScreen';
+import { MaintenanceListScreen } from '../screens/MaintenanceListScreen';
+import { MaintenanceSuccessScreen } from '../screens/MaintenanceSuccessScreen';
 import { ManualDeviceScreen } from '../screens/ManualDeviceScreen';
 import { MyIncidentsScreen } from '../screens/MyIncidentsScreen';
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { RepairSuccessScreen } from '../screens/RepairSuccessScreen';
 import { ScanQrScreen } from '../screens/ScanQrScreen';
-import type { ThamSoDieuHuongGoc, ThamSoTabNhanVien } from './types';
+import { TechnicianWorkDetailScreen } from '../screens/TechnicianWorkDetailScreen';
+import { TechnicianWorkListScreen } from '../screens/TechnicianWorkListScreen';
+import { TechnicianWorkProcessScreen } from '../screens/TechnicianWorkProcessScreen';
+import type {
+  ThamSoDieuHuongGoc,
+  ThamSoTabKyThuatVien,
+  ThamSoTabNhanVien,
+} from './types';
 
-const Tab = createBottomTabNavigator<ThamSoTabNhanVien>();
+const TabNhanVien = createBottomTabNavigator<ThamSoTabNhanVien>();
+const TabKyThuatVien = createBottomTabNavigator<ThamSoTabKyThuatVien>();
 const Stack = createNativeStackNavigator<ThamSoDieuHuongGoc>();
 
 const CHU_DE_DIEU_HUONG = {
@@ -82,7 +97,7 @@ const NHAN_TAB: Record<keyof ThamSoTabNhanVien, string> = {
 
 function NhanVienTabs() {
   return (
-    <Tab.Navigator
+    <TabNhanVien.Navigator
       screenOptions={({ route }) => {
         return {
           headerShown: false,
@@ -96,12 +111,57 @@ function NhanVienTabs() {
         };
       }}
     >
-      <Tab.Screen name="TrangChu" component={EmployeeHomeScreen} />
-      <Tab.Screen name="QuetQR" component={ScanQrScreen} />
-      <Tab.Screen name="SuCoCuaToi" component={MyIncidentsScreen} />
-      <Tab.Screen name="ThongBao" component={NotificationsScreen} />
-      <Tab.Screen name="TaiKhoan" component={ProfileScreen} />
-    </Tab.Navigator>
+      <TabNhanVien.Screen name="TrangChu" component={EmployeeHomeScreen} />
+      <TabNhanVien.Screen name="QuetQR" component={ScanQrScreen} />
+      <TabNhanVien.Screen name="SuCoCuaToi" component={MyIncidentsScreen} />
+      <TabNhanVien.Screen name="ThongBao" component={NotificationsScreen} />
+      <TabNhanVien.Screen name="TaiKhoan" component={ProfileScreen} />
+    </TabNhanVien.Navigator>
+  );
+}
+
+const BIEU_TUONG_TAB_KY_THUAT_VIEN: Record<
+  keyof ThamSoTabKyThuatVien,
+  LucideIcon
+> = {
+  CongViec: ClipboardList,
+  QuetQR: QrCode,
+  BaoTri: Wrench,
+  ThongBao: Bell,
+  TaiKhoan: CircleUserRound,
+};
+
+const NHAN_TAB_KY_THUAT_VIEN: Record<keyof ThamSoTabKyThuatVien, string> = {
+  CongViec: 'Công việc',
+  QuetQR: 'Quét QR',
+  BaoTri: 'Bảo trì',
+  ThongBao: 'Thông báo',
+  TaiKhoan: 'Tài khoản',
+};
+
+function KyThuatVienTabs() {
+  return (
+    <TabKyThuatVien.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarHideOnKeyboard: true,
+        tabBarActiveTintColor: mauSac.chinh,
+        tabBarInactiveTintColor: mauSac.chuPhu,
+        tabBarLabel: NHAN_TAB_KY_THUAT_VIEN[route.name],
+        tabBarLabelStyle: styles.nhanTab,
+        tabBarStyle: styles.thanhTab,
+        tabBarIcon: taoBieuTuongTab(BIEU_TUONG_TAB_KY_THUAT_VIEN[route.name]),
+      })}
+    >
+      <TabKyThuatVien.Screen
+        name="CongViec"
+        component={TechnicianWorkListScreen}
+      />
+      <TabKyThuatVien.Screen name="QuetQR" component={ScanQrScreen} />
+      <TabKyThuatVien.Screen name="BaoTri" component={MaintenanceListScreen} />
+      <TabKyThuatVien.Screen name="ThongBao" component={NotificationsScreen} />
+      <TabKyThuatVien.Screen name="TaiKhoan" component={ProfileScreen} />
+    </TabKyThuatVien.Navigator>
   );
 }
 
@@ -137,11 +197,19 @@ export function RootNavigator() {
             animation: 'slide_from_right',
           }}
         >
-          <Stack.Screen
-            name="NhanVien"
-            component={NhanVienTabs}
-            options={{ headerShown: false }}
-          />
+          {nguoiDung.vaiTro === 'KY_THUAT_VIEN' ? (
+            <Stack.Screen
+              name="KyThuatVien"
+              component={KyThuatVienTabs}
+              options={{ headerShown: false }}
+            />
+          ) : (
+            <Stack.Screen
+              name="NhanVien"
+              component={NhanVienTabs}
+              options={{ headerShown: false }}
+            />
+          )}
           <Stack.Screen
             name="NhapMaThietBi"
             component={ManualDeviceScreen}
@@ -166,6 +234,41 @@ export function RootNavigator() {
             name="ChiTietSuCo"
             component={IncidentDetailScreen}
             options={{ title: 'Chi tiết sự cố' }}
+          />
+          <Stack.Screen
+            name="ChiTietCongViec"
+            component={TechnicianWorkDetailScreen}
+            options={{ title: 'Chi tiết công việc' }}
+          />
+          <Stack.Screen
+            name="XuLyCongViec"
+            component={TechnicianWorkProcessScreen}
+            options={{ title: 'Xử lý công việc' }}
+          />
+          <Stack.Screen
+            name="HoanThanhSuaChua"
+            component={CompleteRepairScreen}
+            options={{ title: 'Hoàn thành sửa chữa' }}
+          />
+          <Stack.Screen
+            name="KetQuaCongViec"
+            component={RepairSuccessScreen}
+            options={{ headerShown: false, gestureEnabled: false }}
+          />
+          <Stack.Screen
+            name="ChiTietBaoTri"
+            component={MaintenanceDetailScreen}
+            options={{ title: 'Chi tiết bảo trì' }}
+          />
+          <Stack.Screen
+            name="ThucHienBaoTri"
+            component={MaintenanceExecutionScreen}
+            options={{ title: 'Thực hiện bảo trì' }}
+          />
+          <Stack.Screen
+            name="KetQuaBaoTri"
+            component={MaintenanceSuccessScreen}
+            options={{ headerShown: false, gestureEnabled: false }}
           />
           <Stack.Screen
             name="DoiMatKhau"

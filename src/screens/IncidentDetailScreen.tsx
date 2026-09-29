@@ -1,6 +1,5 @@
 import React, { useCallback, useState } from 'react';
 import {
-  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -14,16 +13,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DongThongTin } from '../components/DongThongTin';
 import { HuyHieu } from '../components/HuyHieu';
 import { TrangThaiDuLieu } from '../components/TrangThaiDuLieu';
+import { ThuVienAnh } from '../components/ThuVienAnh';
 import { boGoc, mauSac } from '../constants/theme';
 import type { ThamSoDieuHuongGoc } from '../navigation/types';
 import { layThongBaoAnToan } from '../services/apiClient';
 import { layChiTietSuCo } from '../services/suCoService';
-import type { HoSoSuaChua, SuCo, TrangThaiSuCo } from '../types';
+import type { SuCo, TrangThaiSuCo } from '../types';
 import {
   dinhDangNgayGio,
   layNhanTrangThaiThietBi,
   layViTriThietBi,
 } from '../utils/dinhDang';
+import { layHoSoSuaChuaCuoi } from '../utils/nghiepVuCongViec';
 
 type Props = NativeStackScreenProps<ThamSoDieuHuongGoc, 'ChiTietSuCo'>;
 
@@ -31,13 +32,9 @@ const CAC_BUOC: { trangThai: TrangThaiSuCo; nhan: string }[] = [
   { trangThai: 'MOI', nhan: 'Đã gửi' },
   { trangThai: 'DA_PHAN_CONG', nhan: 'Đã phân công' },
   { trangThai: 'DANG_XU_LY', nhan: 'Đang xử lý' },
+  { trangThai: 'CHO_LINH_KIEN', nhan: 'Chờ linh kiện' },
   { trangThai: 'DA_XU_LY', nhan: 'Hoàn thành' },
 ];
-
-function layHoSoCuoi(suCo: SuCo): HoSoSuaChua | undefined {
-  if (Array.isArray(suCo.hoSoSuaChua)) return suCo.hoSoSuaChua.at(-1);
-  return suCo.hoSoSuaChua ?? undefined;
-}
 
 export function IncidentDetailScreen({ route }: Props) {
   const [suCo, setSuCo] = useState<SuCo>();
@@ -74,7 +71,7 @@ export function IncidentDetailScreen({ route }: Props) {
   const viTriHienTai = CAC_BUOC.findIndex(
     buoc => buoc.trangThai === suCo.trangThai,
   );
-  const hoSoCuoi = layHoSoCuoi(suCo);
+  const hoSoCuoi = suCo.ketQuaSuaChua ?? layHoSoSuaChuaCuoi(suCo);
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.anToan}>
@@ -171,26 +168,7 @@ export function IncidentDetailScreen({ route }: Props) {
         {suCo.hinhAnh?.length ? (
           <View style={styles.khuVuc}>
             <Text style={styles.tieuDeKhuVuc}>Ảnh sự cố</Text>
-            <View style={styles.danhSachAnh}>
-              {suCo.hinhAnh.map((duongDan, chiSo) =>
-                /^https?:\/\//.test(duongDan) ? (
-                  <Image
-                    key={`${duongDan}-${chiSo}`}
-                    source={{ uri: duongDan }}
-                    style={styles.anh}
-                  />
-                ) : (
-                  <View
-                    key={`${duongDan}-${chiSo}`}
-                    style={styles.anhKhongXemDuoc}
-                  >
-                    <Text style={styles.anhKhongXemDuocChu}>
-                      Ảnh {chiSo + 1}
-                    </Text>
-                  </View>
-                ),
-              )}
-            </View>
+            <ThuVienAnh danhSachDuongDan={suCo.hinhAnh} />
           </View>
         ) : null}
 
@@ -212,7 +190,7 @@ export function IncidentDetailScreen({ route }: Props) {
               noiDung={
                 suCo.thietBi?.trangThai
                   ? layNhanTrangThaiThietBi(suCo.thietBi.trangThai)
-                  : 'Chưa có thông tin'
+                  : 'Chưa cập nhật'
               }
             />
           </View>
@@ -273,17 +251,6 @@ const styles = StyleSheet.create({
   nhanBuoc: { color: mauSac.chuChinh, fontSize: 14, fontWeight: '700' },
   nhanBuocMo: { color: mauSac.chuPhu, fontWeight: '500' },
   hienTai: { color: mauSac.chinh, fontSize: 12, marginTop: 3 },
-  danhSachAnh: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  anh: { width: 94, height: 94, borderRadius: boGoc.nho },
-  anhKhongXemDuoc: {
-    width: 94,
-    height: 94,
-    borderRadius: boGoc.nho,
-    backgroundColor: mauSac.beMatPhu,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  anhKhongXemDuocChu: { color: mauSac.chuPhu, fontSize: 12 },
   hoanThanh: { borderColor: '#A7D7C5' },
   tieuDeHoanThanh: { color: mauSac.thanhCong, fontSize: 16, fontWeight: '800' },
 });

@@ -7,11 +7,13 @@ import type { AnhDaChon } from '../types';
 
 const SO_ANH_TOI_DA = 3;
 const KICH_THUOC_TOI_DA = 5 * 1024 * 1024;
+const CHAT_LUONG_ANH = 0.6;
 
 interface BoChonAnhProps {
   danhSachAnh: AnhDaChon[];
   onChange: (danhSachAnh: AnhDaChon[]) => void;
   onLoi: (thongBao?: string) => void;
+  nhan?: string;
 }
 
 function chuyenAnh(anh: ImagePicker.ImagePickerAsset): AnhDaChon | null {
@@ -24,7 +26,12 @@ function chuyenAnh(anh: ImagePicker.ImagePickerAsset): AnhDaChon | null {
   };
 }
 
-export function BoChonAnh({ danhSachAnh, onChange, onLoi }: BoChonAnhProps) {
+export function BoChonAnh({
+  danhSachAnh,
+  onChange,
+  onLoi,
+  nhan = 'Ảnh sự cố',
+}: BoChonAnhProps) {
   function kiemTraAnh(danhSachMoi: AnhDaChon[]) {
     const anhKhongHopLe = danhSachMoi.find(
       anh =>
@@ -55,7 +62,7 @@ export function BoChonAnh({ danhSachAnh, onChange, onLoi }: BoChonAnhProps) {
       mediaTypes: ['images'],
       allowsMultipleSelection: true,
       selectionLimit: soAnhConLai,
-      quality: 0.8,
+      quality: CHAT_LUONG_ANH,
     });
     if (ketQua.canceled) {
       return;
@@ -82,7 +89,7 @@ export function BoChonAnh({ danhSachAnh, onChange, onLoi }: BoChonAnhProps) {
       }
       const ketQua = await ImagePicker.launchCameraAsync({
         mediaTypes: ['images'],
-        quality: 0.8,
+        quality: CHAT_LUONG_ANH,
       });
       if (ketQua.canceled) {
         return;
@@ -98,7 +105,7 @@ export function BoChonAnh({ danhSachAnh, onChange, onLoi }: BoChonAnhProps) {
 
   return (
     <View style={styles.khung}>
-      <Text style={styles.nhan}>Ảnh sự cố</Text>
+      <Text style={styles.nhan}>{nhan}</Text>
       <Text style={styles.moTa}>Tối đa 3 ảnh, mỗi ảnh không quá 5 MB.</Text>
       <View style={styles.hanhDong}>
         <Pressable style={styles.nut} onPress={() => xuLyChupAnh()}>

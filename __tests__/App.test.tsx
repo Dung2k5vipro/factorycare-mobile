@@ -51,6 +51,7 @@ jest.mock('lucide-react-native', () => {
     CircleAlert: BieuTuong,
     CircleUserRound: BieuTuong,
     ClipboardList: BieuTuong,
+    ClipboardCheck: BieuTuong,
     Eye: BieuTuong,
     EyeOff: BieuTuong,
     Flashlight: BieuTuong,
@@ -61,14 +62,18 @@ jest.mock('lucide-react-native', () => {
     KeyRound: BieuTuong,
     LogOut: BieuTuong,
     MapPin: BieuTuong,
+    Play: BieuTuong,
+    Plus: BieuTuong,
     QrCode: BieuTuong,
     RotateCcw: BieuTuong,
+    Save: BieuTuong,
     Search: BieuTuong,
     Send: BieuTuong,
     ShieldCheck: BieuTuong,
     UserRound: BieuTuong,
     Wrench: BieuTuong,
     X: BieuTuong,
+    Trash2: BieuTuong,
   };
 });
 

@@ -1,12 +1,35 @@
 import { mauSac } from '../constants/theme';
 import type {
+  KetQuaSuaChua,
   MucDoSuCo,
+  TrangThaiHangMucBaoTri,
+  TrangThaiPhieuBaoTri,
   SuCo,
   ThietBi,
   TrangThaiSuCo,
   TrangThaiThietBi,
   ViTri,
 } from '../types';
+
+const NHAN_TRANG_THAI_HANG_MUC: Record<TrangThaiHangMucBaoTri, string> = {
+  TOT: 'Đạt',
+  KHONG_TOT: 'Không đạt',
+  KHONG_AP_DUNG: 'Không áp dụng',
+};
+
+const NHAN_TRANG_THAI_BAO_TRI: Record<TrangThaiPhieuBaoTri, string> = {
+  CHO_THUC_HIEN: 'Chờ thực hiện',
+  DANG_THUC_HIEN: 'Đang thực hiện',
+  HOAN_THANH: 'Hoàn thành',
+  QUA_HAN: 'Quá hạn',
+  DA_HUY: 'Đã hủy',
+};
+
+const NHAN_KET_QUA_SUA_CHUA: Record<KetQuaSuaChua, string> = {
+  DA_SUA_XONG: 'Hoạt động bình thường',
+  SUA_MOT_PHAN: 'Cần theo dõi',
+  KHONG_SUA_DUOC: 'Không thể vận hành',
+};
 
 const NHAN_TRANG_THAI_THIET_BI: Record<TrangThaiThietBi, string> = {
   DANG_HOAT_DONG: 'Đang hoạt động',
@@ -20,6 +43,7 @@ const NHAN_TRANG_THAI_SU_CO: Record<TrangThaiSuCo, string> = {
   MOI: 'Mới',
   DA_PHAN_CONG: 'Đã phân công',
   DANG_XU_LY: 'Đang xử lý',
+  CHO_LINH_KIEN: 'Chờ linh kiện',
   DA_XU_LY: 'Hoàn thành',
   DA_HUY: 'Đã hủy',
 };
@@ -45,6 +69,39 @@ export function layNhanMucDo(mucDo?: string) {
   return NHAN_MUC_DO[mucDo as MucDoSuCo] ?? 'Chưa xác định';
 }
 
+export function layNhanKetQuaSuaChua(ketQua?: string) {
+  return NHAN_KET_QUA_SUA_CHUA[ketQua as KetQuaSuaChua] ?? 'Chưa xác định';
+}
+
+export function layNhanTrangThaiBaoTri(trangThai?: string) {
+  return (
+    NHAN_TRANG_THAI_BAO_TRI[trangThai as TrangThaiPhieuBaoTri] ??
+    'Chưa xác định'
+  );
+}
+
+export function layNhanTrangThaiHangMucBaoTri(trangThai?: string) {
+  return (
+    NHAN_TRANG_THAI_HANG_MUC[trangThai as TrangThaiHangMucBaoTri] ??
+    'Chưa thực hiện'
+  );
+}
+
+export function layMauTrangThaiBaoTri(trangThai?: string) {
+  switch (trangThai) {
+    case 'HOAN_THANH':
+      return { nen: mauSac.thanhCongNhat, chu: mauSac.thanhCong };
+    case 'DANG_THUC_HIEN':
+      return { nen: mauSac.thongTinNhat, chu: mauSac.thongTin };
+    case 'QUA_HAN':
+      return { nen: mauSac.loiNhat, chu: mauSac.loi };
+    case 'CHO_THUC_HIEN':
+      return { nen: mauSac.canhBaoNhat, chu: mauSac.canhBao };
+    default:
+      return { nen: mauSac.beMatPhu, chu: mauSac.chuPhu };
+  }
+}
+
 export function layMauTrangThaiThietBi(trangThai?: string) {
   switch (trangThai) {
     case 'DANG_HOAT_DONG':
@@ -66,6 +123,8 @@ export function layMauTrangThaiSuCo(trangThai?: string) {
     case 'DANG_XU_LY':
     case 'DA_PHAN_CONG':
       return { nen: mauSac.thongTinNhat, chu: mauSac.thongTin };
+    case 'CHO_LINH_KIEN':
+      return { nen: mauSac.canhBaoNhat, chu: mauSac.canhBao };
     case 'DA_HUY':
       return { nen: mauSac.beMatPhu, chu: mauSac.chuPhu };
     default:
@@ -107,7 +166,7 @@ export function dinhDangNgay(giaTri?: string | null) {
 }
 
 export function layTenLoaiThietBi(thietBi: ThietBi) {
-  return thietBi.loaiThietBi?.tenLoai ?? thietBi.tenLoai ?? 'Chưa phân loại';
+  return thietBi.loaiThietBi?.tenLoai ?? thietBi.tenLoai ?? 'Chưa cập nhật';
 }
 
 function layChuoiViTri(viTri?: ViTri | null): string[] {

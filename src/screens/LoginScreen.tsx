@@ -71,7 +71,7 @@ export function LoginScreen() {
             <View style={styles.dauBieuMau}>
               <Text style={styles.tieuDe}>Đăng nhập</Text>
               <Text style={styles.huongDan}>
-                Sử dụng tài khoản nhân viên được cấp.
+                Sử dụng tài khoản nhân viên hoặc kỹ thuật viên được cấp.
               </Text>
             </View>
             <OThongTin

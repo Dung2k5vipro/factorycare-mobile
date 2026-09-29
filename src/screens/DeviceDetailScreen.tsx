@@ -13,14 +13,18 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DongThongTin } from '../components/DongThongTin';
 import { HuyHieu } from '../components/HuyHieu';
 import { NutChinh } from '../components/NutChinh';
+import { TheBaoTri } from '../components/TheBaoTri';
 import { TheSuCo } from '../components/TheSuCo';
 import { TrangThaiDuLieu } from '../components/TrangThaiDuLieu';
 import { boGoc, mauSac } from '../constants/theme';
+import { useAuth } from '../contexts/AuthContext';
 import type { ThamSoDieuHuongGoc } from '../navigation/types';
 import { layThongBaoAnToan } from '../services/apiClient';
+import { layDanhSachPhieuBaoTriCuaToi } from '../services/baoTriService';
+import { layDanhSachCongViecCuaToi } from '../services/congViecService';
 import { layDanhSachSuCoCuaToi } from '../services/suCoService';
 import { layChiTietThietBi } from '../services/thietBiService';
-import type { SuCo, ThietBi } from '../types';
+import type { PhieuBaoTri, SuCo, ThietBi } from '../types';
 import {
   dinhDangNgay,
   layTenLoaiThietBi,
@@ -30,8 +34,12 @@ import {
 type Props = NativeStackScreenProps<ThamSoDieuHuongGoc, 'ChiTietThietBi'>;
 
 export function DeviceDetailScreen({ navigation, route }: Props) {
+  const { nguoiDung } = useAuth();
   const [thietBi, setThietBi] = useState<ThietBi>(route.params.thietBi);
   const [danhSachSuCo, setDanhSachSuCo] = useState<SuCo[]>([]);
+  const [danhSachPhieuBaoTri, setDanhSachPhieuBaoTri] = useState<PhieuBaoTri[]>(
+    [],
+  );
   const [dangTai, setDangTai] = useState(false);
   const [loi, setLoi] = useState<string>();
 
@@ -39,21 +47,33 @@ export function DeviceDetailScreen({ navigation, route }: Props) {
     setDangTai(true);
     setLoi(undefined);
     try {
-      const [chiTiet, ketQuaSuCo] = await Promise.all([
+      const [chiTiet, ketQuaSuCo, ketQuaBaoTri] = await Promise.all([
         layChiTietThietBi(route.params.thietBi.id),
-        layDanhSachSuCoCuaToi({
-          thietBiId: route.params.thietBi.id,
-          gioiHan: 3,
-        }),
+        nguoiDung?.vaiTro === 'KY_THUAT_VIEN'
+          ? layDanhSachCongViecCuaToi({
+              thietBiId: route.params.thietBi.id,
+              gioiHan: 10,
+            })
+          : layDanhSachSuCoCuaToi({
+              thietBiId: route.params.thietBi.id,
+              gioiHan: 3,
+            }),
+        nguoiDung?.vaiTro === 'KY_THUAT_VIEN'
+          ? layDanhSachPhieuBaoTriCuaToi({
+              thietBiId: route.params.thietBi.id,
+              gioiHan: 3,
+            })
+          : Promise.resolve({ danhSach: [] as PhieuBaoTri[] }),
       ]);
       setThietBi(chiTiet);
       setDanhSachSuCo(ketQuaSuCo.danhSach);
+      setDanhSachPhieuBaoTri(ketQuaBaoTri.danhSach);
     } catch (loiTai) {
       setLoi(layThongBaoAnToan(loiTai));
     } finally {
       setDangTai(false);
     }
-  }, [route.params.thietBi.id]);
+  }, [nguoiDung?.vaiTro, route.params.thietBi.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -64,7 +84,19 @@ export function DeviceDetailScreen({ navigation, route }: Props) {
   const suCoDangMo = danhSachSuCo.find(suCo =>
     ['MOI', 'DA_PHAN_CONG', 'DANG_XU_LY'].includes(suCo.trangThai),
   );
+  const phieuBaoTriDangMo = danhSachPhieuBaoTri.find(phieu =>
+    ['CHO_THUC_HIEN', 'DANG_THUC_HIEN', 'QUA_HAN'].includes(phieu.trangThai),
+  );
   const duocBaoSuCo = thietBi.trangThai !== 'THANH_LY';
+  const coVaiTroKyThuatVien = nguoiDung?.vaiTro === 'KY_THUAT_VIEN';
+
+  function moChiTietSuCo(suCo: SuCo) {
+    if (coVaiTroKyThuatVien) {
+      navigation.navigate('ChiTietCongViec', { congViecId: suCo.id });
+      return;
+    }
+    navigation.navigate('ChiTietSuCo', { suCoId: suCo.id });
+  }
 
   return (
     <SafeAreaView edges={['bottom']} style={styles.anToan}>
@@ -97,6 +129,38 @@ export function DeviceDetailScreen({ navigation, route }: Props) {
               <Text style={styles.viTri}>{layViTriThietBi(thietBi)}</Text>
             </View>
 
+            {coVaiTroKyThuatVien ? (
+              <View style={styles.khuVuc}>
+                <Text style={styles.tieuDeKhuVuc}>Thông tin kỹ thuật</Text>
+                <DongThongTin
+                  nhan="Loại thiết bị"
+                  noiDung={layTenLoaiThietBi(thietBi)}
+                />
+                <DongThongTin nhan="Model" noiDung={thietBi.model} />
+                <DongThongTin nhan="Serial" noiDung={thietBi.soSerial} />
+                <DongThongTin
+                  nhan="Hãng sản xuất"
+                  noiDung={thietBi.hangSanXuat}
+                />
+                <DongThongTin nhan="Mô tả" noiDung={thietBi.moTa} />
+              </View>
+            ) : null}
+
+            {coVaiTroKyThuatVien &&
+            (thietBi.ngayBatDauBaoHanh || thietBi.ngayHetBaoHanh) ? (
+              <View style={styles.khuVuc}>
+                <Text style={styles.tieuDeKhuVuc}>Bảo hành</Text>
+                <DongThongTin
+                  nhan="Bắt đầu"
+                  noiDung={dinhDangNgay(thietBi.ngayBatDauBaoHanh)}
+                />
+                <DongThongTin
+                  nhan="Hết hạn"
+                  noiDung={dinhDangNgay(thietBi.ngayHetBaoHanh)}
+                />
+              </View>
+            ) : null}
+
             {thietBi.ngayBaoTriTiepTheo ? (
               <View style={styles.khuVuc}>
                 <Text style={styles.tieuDeKhuVuc}>Thông tin bảo trì</Text>
@@ -112,24 +176,39 @@ export function DeviceDetailScreen({ navigation, route }: Props) {
                 <Text style={styles.tieuDeKhuVuc}>Sự cố hiện tại</Text>
                 <TheSuCo
                   suCo={suCoDangMo}
-                  onPress={() =>
-                    navigation.navigate('ChiTietSuCo', {
-                      suCoId: suCoDangMo.id,
-                    })
-                  }
+                  onPress={() => moChiTietSuCo(suCoDangMo)}
                 />
               </View>
             ) : null}
 
             {danhSachSuCo.length ? (
               <View style={styles.khuVuc}>
-                <Text style={styles.tieuDeKhuVuc}>Sự cố gần đây của bạn</Text>
+                <Text style={styles.tieuDeKhuVuc}>
+                  {coVaiTroKyThuatVien
+                    ? 'Công việc liên quan được phân công'
+                    : 'Sự cố gần đây của bạn'}
+                </Text>
                 {danhSachSuCo.slice(0, 3).map(suCo => (
                   <TheSuCo
                     key={suCo.id}
                     suCo={suCo}
+                    onPress={() => moChiTietSuCo(suCo)}
+                  />
+                ))}
+              </View>
+            ) : null}
+
+            {coVaiTroKyThuatVien && danhSachPhieuBaoTri.length ? (
+              <View style={styles.khuVuc}>
+                <Text style={styles.tieuDeKhuVuc}>Bảo trì liên quan</Text>
+                {danhSachPhieuBaoTri.slice(0, 3).map(phieu => (
+                  <TheBaoTri
+                    key={phieu.id}
+                    phieuBaoTri={phieu}
                     onPress={() =>
-                      navigation.navigate('ChiTietSuCo', { suCoId: suCo.id })
+                      navigation.navigate('ChiTietBaoTri', {
+                        phieuBaoTriId: phieu.id,
+                      })
                     }
                   />
                 ))}
@@ -138,7 +217,7 @@ export function DeviceDetailScreen({ navigation, route }: Props) {
           </>
         )}
 
-        {!duocBaoSuCo ? (
+        {!coVaiTroKyThuatVien && !duocBaoSuCo ? (
           <View style={styles.canhBao}>
             <AlertTriangle color={mauSac.canhBao} size={20} />
             <Text style={styles.canhBaoChu}>
@@ -146,12 +225,32 @@ export function DeviceDetailScreen({ navigation, route }: Props) {
             </Text>
           </View>
         ) : null}
-        <NutChinh
-          nhan="Báo sự cố"
-          bieuTuong={AlertTriangle}
-          biVoHieu={!duocBaoSuCo || dangTai}
-          onPress={() => navigation.navigate('BaoSuCo', { thietBi })}
-        />
+        {coVaiTroKyThuatVien ? (
+          suCoDangMo ? (
+            <NutChinh
+              nhan="Xem công việc"
+              biVoHieu={dangTai}
+              onPress={() => moChiTietSuCo(suCoDangMo)}
+            />
+          ) : phieuBaoTriDangMo ? (
+            <NutChinh
+              nhan="Xem phiếu bảo trì"
+              biVoHieu={dangTai}
+              onPress={() =>
+                navigation.navigate('ChiTietBaoTri', {
+                  phieuBaoTriId: phieuBaoTriDangMo.id,
+                })
+              }
+            />
+          ) : null
+        ) : (
+          <NutChinh
+            nhan="Báo sự cố"
+            bieuTuong={AlertTriangle}
+            biVoHieu={!duocBaoSuCo || dangTai}
+            onPress={() => navigation.navigate('BaoSuCo', { thietBi })}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );

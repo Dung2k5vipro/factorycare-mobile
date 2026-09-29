@@ -58,24 +58,19 @@ export function CreateIncidentScreen({ navigation, route }: Props) {
     setLoiChung(undefined);
     if (Object.keys(loiMoi).length || !mucDo || dangGuiRef.current) return;
 
-    if (danhSachAnh.length) {
-      setLoiChung(
-        'Máy chủ chưa hỗ trợ tải ảnh sự cố. Vui lòng xóa ảnh để gửi báo cáo, ảnh đã chọn vẫn được giữ để bạn thao tác lại.',
-      );
-      return;
-    }
-
     dangGuiRef.current = true;
     setDangGui(true);
     try {
-      const suCo = await taoSuCo({
-        thietBiId: thietBi.id,
-        tieuDe: tieuDeDaTrim,
-        moTa: moTaDaTrim,
-        mucDo,
-        thoiGianXayRa: new Date().toISOString(),
-        hinhAnh: [],
-      });
+      const suCo = await taoSuCo(
+        {
+          thietBiId: thietBi.id,
+          tieuDe: tieuDeDaTrim,
+          moTa: moTaDaTrim,
+          mucDo,
+          thoiGianXayRa: new Date().toISOString(),
+        },
+        danhSachAnh,
+      );
       navigation.replace('BaoSuCoThanhCong', { suCo });
     } catch (loi) {
       if (loi instanceof LoiApi && loi.loiTruong) {

@@ -11,7 +11,7 @@ export function DongThongTin({ nhan, noiDung }: DongThongTinProps) {
   return (
     <View style={styles.dong}>
       <Text style={styles.nhan}>{nhan}</Text>
-      <Text style={styles.noiDung}>{noiDung || 'Chưa có thông tin'}</Text>
+      <Text style={styles.noiDung}>{noiDung || 'Chưa cập nhật'}</Text>
     </View>
   );
 }

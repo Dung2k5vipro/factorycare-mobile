@@ -3,7 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ChevronRight } from 'lucide-react-native';
 import { boGoc, mauSac } from '../constants/theme';
 import type { SuCo } from '../types';
-import { layThoiGianSuCo } from '../utils/dinhDang';
+import { layThoiGianSuCo, layViTriThietBi } from '../utils/dinhDang';
 import { HuyHieu } from './HuyHieu';
 
 interface TheSuCoProps {
@@ -25,10 +25,20 @@ export function TheSuCo({ suCo, onPress }: TheSuCoProps) {
       <Text numberOfLines={2} style={styles.tieuDe}>
         {suCo.tieuDe}
       </Text>
-      {suCo.thietBi ? (
-        <Text style={styles.thietBi}>
-          {suCo.thietBi.tenThietBi} · {suCo.thietBi.maThietBi}
+      {suCo.moTa ? (
+        <Text numberOfLines={2} style={styles.moTa}>
+          {suCo.moTa}
         </Text>
+      ) : null}
+      {suCo.thietBi ? (
+        <>
+          <Text style={styles.thietBi}>
+            {suCo.thietBi.tenThietBi} · {suCo.thietBi.maThietBi}
+          </Text>
+          <Text numberOfLines={2} style={styles.viTri}>
+            {layViTriThietBi(suCo.thietBi)}
+          </Text>
+        </>
       ) : null}
       <View style={styles.huyHieu}>
         <HuyHieu loai="mucDo" giaTri={suCo.mucDo} />
@@ -70,6 +80,12 @@ const styles = StyleSheet.create({
   thietBi: {
     color: mauSac.chuPhu,
     fontSize: 14,
+  },
+  moTa: { color: mauSac.chuChinh, fontSize: 13, lineHeight: 19 },
+  viTri: {
+    color: mauSac.chuPhu,
+    fontSize: 12,
+    lineHeight: 17,
   },
   huyHieu: {
     flexDirection: 'row',
