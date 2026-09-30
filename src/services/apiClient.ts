@@ -1,3 +1,4 @@
+import { NativeModules, Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { AnhDaChon, PhanHoiApi } from '../types';
 
@@ -39,12 +40,45 @@ export async function xoaToken() {
   await AsyncStorage.removeItem(KHOA_TOKEN);
 }
 
-function layDiaChiApi() {
-  const diaChiApi = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
-  if (!diaChiApi) {
-    throw new LoiApi('Ứng dụng chưa được cấu hình địa chỉ máy chủ.');
+function layHostTuScriptURL(): string | null {
+  try {
+    const scriptURL: string | undefined = NativeModules?.SourceCode?.scriptURL;
+    if (!scriptURL) return null;
+    const match = scriptURL.match(/^https?:\/\/([^:/]+)(?::\d+)?/i);
+    return match ? match[1] : null;
+  } catch {
+    return null;
   }
-  return diaChiApi.replace(/\/$/, '');
+}
+
+function layDiaChiApi() {
+  const diaChiEnv = process.env.EXPO_PUBLIC_API_BASE_URL?.trim();
+
+  // 1. Ưu tiên URL cố định nếu được đặt trong .env (và không phải 'auto')
+  if (diaChiEnv && diaChiEnv !== 'auto') {
+    if (/^https?:\/\//i.test(diaChiEnv)) {
+      return diaChiEnv.replace(/\/$/, '');
+    }
+  }
+
+  // 2. Tự động nhận diện host máy chủ từ Metro Bundler (qua QR Code Wi-Fi hoặc cáp USB 127.0.0.1)
+  const hostTuScript = layHostTuScriptURL();
+  if (hostTuScript) {
+    if (hostTuScript === 'localhost' && Platform.OS === 'android') {
+      return 'http://10.0.2.2:3005/api';
+    }
+    return `http://${hostTuScript}:3005/api`;
+  }
+
+  // 3. Fallback
+  if (diaChiEnv) {
+    return diaChiEnv.replace(/\/$/, '');
+  }
+
+  if (Platform.OS === 'android') {
+    return 'http://10.0.2.2:3005/api';
+  }
+  return 'http://localhost:3005/api';
 }
 
 export function taoDiaChiTaiNguyen(duongDan?: string | null) {
@@ -259,7 +293,7 @@ export async function goiApi<T>(duongDan: string, tuyChon: TuyChonYeuCau = {}) {
       );
     }
 
-    return (noiDung as PhanHoiApi<T>).duLieu;
+    return (noiDung as unknown as PhanHoiApi<T>).duLieu;
   } catch (loi) {
     if (loi instanceof LoiApi) {
       throw loi;

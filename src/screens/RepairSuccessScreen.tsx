@@ -22,9 +22,9 @@ export function RepairSuccessScreen({ navigation, route }: Props) {
           <CheckCircle2 color={mauSac.thanhCong} size={42} strokeWidth={2.2} />
         </View>
         <View style={styles.dauTrang}>
-          <Text style={styles.tieuDe}>Công việc đã hoàn thành</Text>
+          <Text style={styles.tieuDe}>Đã gửi kết quả sửa chữa</Text>
           <Text style={styles.moTa}>
-            Kết quả sửa chữa đã được ghi nhận trên hệ thống.
+            Kết quả sửa chữa đã được lưu. Đang chờ nhân viên vận hành kiểm tra và xác nhận máy hoạt động.
           </Text>
         </View>
         <View style={styles.khuVuc}>

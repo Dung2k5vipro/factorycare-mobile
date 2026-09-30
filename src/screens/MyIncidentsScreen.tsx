@@ -23,10 +23,11 @@ import { layDanhSachSuCoCuaToi } from '../services/suCoService';
 import type { SuCo } from '../types';
 
 type Props = BottomTabScreenProps<ThamSoTabNhanVien, 'SuCoCuaToi'>;
-type BoLocNhan = 'TAT_CA' | 'DANG_XU_LY' | 'HOAN_THANH';
+type BoLocNhan = 'TAT_CA' | 'DANG_XU_LY' | 'CHO_XAC_NHAN' | 'HOAN_THANH';
 
 const CAC_BO_LOC: { giaTri: BoLocNhan; nhan: string }[] = [
   { giaTri: 'TAT_CA', nhan: 'Tất cả' },
+  { giaTri: 'CHO_XAC_NHAN', nhan: 'Chờ xác nhận' },
   { giaTri: 'DANG_XU_LY', nhan: 'Đang xử lý' },
   { giaTri: 'HOAN_THANH', nhan: 'Hoàn thành' },
 ];
@@ -66,8 +67,11 @@ export function MyIncidentsScreen({ navigation }: Props) {
 
   const danhSachDaLoc = danhSachSuCo.filter(suCo => {
     if (boLoc === 'TAT_CA') return true;
+    if (boLoc === 'CHO_XAC_NHAN') return suCo.trangThai === 'CHO_XAC_NHAN';
     if (boLoc === 'HOAN_THANH') return suCo.trangThai === 'DA_XU_LY';
-    return ['MOI', 'DA_PHAN_CONG', 'DANG_XU_LY'].includes(suCo.trangThai);
+    return ['MOI', 'DA_PHAN_CONG', 'DANG_XU_LY', 'CHO_LINH_KIEN'].includes(
+      suCo.trangThai,
+    );
   });
 
   return (

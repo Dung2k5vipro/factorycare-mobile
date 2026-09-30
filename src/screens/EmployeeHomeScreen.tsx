@@ -53,8 +53,13 @@ export function EmployeeHomeScreen({ navigation }: Props) {
     }, [taiDuLieu]),
   );
 
+  const choXacNhan = danhSachSuCo.filter(
+    suCo => suCo.trangThai === 'CHO_XAC_NHAN',
+  ).length;
   const dangXuLy = danhSachSuCo.filter(suCo =>
-    ['MOI', 'DA_PHAN_CONG', 'DANG_XU_LY'].includes(suCo.trangThai),
+    ['MOI', 'DA_PHAN_CONG', 'DANG_XU_LY', 'CHO_LINH_KIEN'].includes(
+      suCo.trangThai,
+    ),
   ).length;
   const hoanThanh = danhSachSuCo.filter(
     suCo => suCo.trangThai === 'DA_XU_LY',
@@ -129,6 +134,21 @@ export function EmployeeHomeScreen({ navigation }: Props) {
           ) : (
             <>
               <View style={styles.tongQuan}>
+                <Pressable
+                  style={styles.soLieu}
+                  onPress={() => navigation.navigate('SuCoCuaToi')}
+                >
+                  <Text
+                    style={[
+                      styles.soLieuGiaTri,
+                      choXacNhan > 0 && styles.soLieuChoXacNhan,
+                    ]}
+                  >
+                    {choXacNhan}
+                  </Text>
+                  <Text style={styles.soLieuNhan}>Chờ xác nhận</Text>
+                </Pressable>
+                <View style={styles.phanCach} />
                 <Pressable
                   style={styles.soLieu}
                   onPress={() => navigation.navigate('SuCoCuaToi')}
@@ -231,6 +251,7 @@ const styles = StyleSheet.create({
   },
   soLieu: { flex: 1, alignItems: 'center', gap: 4 },
   soLieuGiaTri: { color: mauSac.chuChinh, fontSize: 26, fontWeight: '800' },
+  soLieuChoXacNhan: { color: '#D97706' },
   soLieuNhan: { color: mauSac.chuPhu, fontSize: 13 },
   phanCach: { width: 1, backgroundColor: mauSac.vien },
   danhSachGanDay: { gap: 12 },

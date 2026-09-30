@@ -62,3 +62,10 @@ export function taoSuCo(
     body: duLieuTao,
   });
 }
+
+export function xacNhanHoatDongSuCo(id: number) {
+  return goiApi<SuCo>(`/su-co/cua-toi/${id}/xac-nhan`, {
+    method: 'PATCH',
+  });
+}
+

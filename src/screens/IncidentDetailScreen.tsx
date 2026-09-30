@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
   RefreshControl,
   ScrollView,
@@ -8,16 +8,20 @@ import {
 } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useFocusEffect } from '@react-navigation/native';
-import { Check, Circle } from 'lucide-react-native';
+import { Check, CheckCircle2, Circle } from 'lucide-react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DongThongTin } from '../components/DongThongTin';
 import { HuyHieu } from '../components/HuyHieu';
+import { NutChinh } from '../components/NutChinh';
 import { TrangThaiDuLieu } from '../components/TrangThaiDuLieu';
 import { ThuVienAnh } from '../components/ThuVienAnh';
 import { boGoc, mauSac } from '../constants/theme';
 import type { ThamSoDieuHuongGoc } from '../navigation/types';
 import { layThongBaoAnToan } from '../services/apiClient';
-import { layChiTietSuCo } from '../services/suCoService';
+import {
+  layChiTietSuCo,
+  xacNhanHoatDongSuCo,
+} from '../services/suCoService';
 import type { SuCo, TrangThaiSuCo } from '../types';
 import {
   dinhDangNgayGio,
@@ -33,13 +37,17 @@ const CAC_BUOC: { trangThai: TrangThaiSuCo; nhan: string }[] = [
   { trangThai: 'DA_PHAN_CONG', nhan: 'Đã phân công' },
   { trangThai: 'DANG_XU_LY', nhan: 'Đang xử lý' },
   { trangThai: 'CHO_LINH_KIEN', nhan: 'Chờ linh kiện' },
+  { trangThai: 'CHO_XAC_NHAN', nhan: 'Chờ xác nhận' },
   { trangThai: 'DA_XU_LY', nhan: 'Hoàn thành' },
 ];
 
 export function IncidentDetailScreen({ route }: Props) {
   const [suCo, setSuCo] = useState<SuCo>();
   const [dangTai, setDangTai] = useState(true);
+  const [dangXacNhan, setDangXacNhan] = useState(false);
   const [loi, setLoi] = useState<string>();
+  const [loiXacNhan, setLoiXacNhan] = useState<string>();
+  const dangXacNhanRef = useRef(false);
 
   const taiDuLieu = useCallback(async () => {
     setDangTai(true);
@@ -58,6 +66,22 @@ export function IncidentDetailScreen({ route }: Props) {
       taiDuLieu();
     }, [taiDuLieu]),
   );
+
+  async function xuLyXacNhanHoatDong() {
+    if (!suCo || dangXacNhanRef.current) return;
+    dangXacNhanRef.current = true;
+    setDangXacNhan(true);
+    setLoiXacNhan(undefined);
+    try {
+      const suCoMoi = await xacNhanHoatDongSuCo(suCo.id);
+      setSuCo(suCoMoi);
+    } catch (loiGui) {
+      setLoiXacNhan(layThongBaoAnToan(loiGui));
+    } finally {
+      dangXacNhanRef.current = false;
+      setDangXacNhan(false);
+    }
+  }
 
   if (dangTai && !suCo) {
     return <TrangThaiDuLieu loai="dangTai" moTa="Đang tải chi tiết sự cố..." />;
@@ -172,6 +196,58 @@ export function IncidentDetailScreen({ route }: Props) {
           </View>
         ) : null}
 
+        {suCo.trangThai === 'CHO_XAC_NHAN' ? (
+          <View style={[styles.khuVuc, styles.choXacNhan]}>
+            <View style={styles.tieuDeHangTrai}>
+              <CheckCircle2 color={mauSac.chinh} size={22} />
+              <Text style={styles.tieuDeChoXacNhan}>
+                Kỹ thuật viên đã sửa xong
+              </Text>
+            </View>
+            <Text style={styles.moTaChoXacNhan}>
+              Vui lòng kiểm tra thực tế máy và bấm nút xác nhận dưới đây để hoàn tất quy trình sửa và chuyển thiết bị về trạng thái đang hoạt động.
+            </Text>
+            <DongThongTin
+              nhan="Nguyên nhân"
+              noiDung={hoSoCuoi?.nguyenNhan}
+            />
+            <DongThongTin
+              nhan="Cách xử lý"
+              noiDung={hoSoCuoi?.cachXuLy}
+            />
+            <DongThongTin
+              nhan="Ghi chú kết quả"
+              noiDung={hoSoCuoi?.ghiChu || hoSoCuoi?.ketQua}
+            />
+            {hoSoCuoi?.linhKienThayThe?.length ? (
+              <DongThongTin
+                nhan="Linh kiện đã thay"
+                noiDung={hoSoCuoi.linhKienThayThe
+                  .map(
+                    lk =>
+                      `${lk.tenLinhKien} × ${lk.soLuong} ${lk.donVi ?? ''}`.trim(),
+                  )
+                  .join('\n')}
+              />
+            ) : null}
+            {hoSoCuoi?.hinhAnhSuaChua?.length ? (
+              <View style={styles.khuVucAnh}>
+                <Text style={styles.nhanAnh}>Ảnh sửa chữa:</Text>
+                <ThuVienAnh danhSachDuongDan={hoSoCuoi.hinhAnhSuaChua} />
+              </View>
+            ) : null}
+            {loiXacNhan ? (
+              <Text style={styles.loiXacNhan}>{loiXacNhan}</Text>
+            ) : null}
+            <NutChinh
+              nhan="Xác nhận máy đã hoạt động"
+              bieuTuong={CheckCircle2}
+              dangTai={dangXacNhan}
+              onPress={() => xuLyXacNhanHoatDong()}
+            />
+          </View>
+        ) : null}
+
         {suCo.trangThai === 'DA_XU_LY' ? (
           <View style={[styles.khuVuc, styles.hoanThanh]}>
             <Text style={styles.tieuDeHoanThanh}>Sự cố đã hoàn thành</Text>
@@ -190,7 +266,7 @@ export function IncidentDetailScreen({ route }: Props) {
               noiDung={
                 suCo.thietBi?.trangThai
                   ? layNhanTrangThaiThietBi(suCo.thietBi.trangThai)
-                  : 'Chưa cập nhật'
+                  : 'Đang hoạt động'
               }
             />
           </View>
@@ -226,6 +302,40 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     marginBottom: 4,
   },
+  tieuDeHangTrai: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 2,
+  },
+  choXacNhan: {
+    borderColor: mauSac.chinh,
+    backgroundColor: '#F4FBF7',
+    gap: 12,
+  },
+  tieuDeChoXacNhan: {
+    color: mauSac.chinh,
+    fontSize: 17,
+    fontWeight: '800',
+  },
+  moTaChoXacNhan: {
+    color: mauSac.chuChinh,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  khuVucAnh: {
+    gap: 6,
+    marginTop: 4,
+  },
+  nhanAnh: {
+    color: mauSac.chuPhu,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  loiXacNhan: {
+    color: mauSac.loi,
+    fontSize: 13,
+  },
   daHuy: {
     backgroundColor: mauSac.beMatPhu,
     borderRadius: boGoc.nho,
@@ -254,3 +364,4 @@ const styles = StyleSheet.create({
   hoanThanh: { borderColor: '#A7D7C5' },
   tieuDeHoanThanh: { color: mauSac.thanhCong, fontSize: 16, fontWeight: '800' },
 });
+

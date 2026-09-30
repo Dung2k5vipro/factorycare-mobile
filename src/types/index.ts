@@ -140,6 +140,7 @@ export type TrangThaiSuCo =
   | 'DA_PHAN_CONG'
   | 'DANG_XU_LY'
   | 'CHO_LINH_KIEN'
+  | 'CHO_XAC_NHAN'
   | 'DA_XU_LY'
   | 'DA_HUY';
 

@@ -227,9 +227,17 @@ export function TechnicianWorkDetailScreen({ navigation, route }: Props) {
           </View>
         ) : null}
 
-        {congViec.trangThai === 'DA_XU_LY' ? (
+        {congViec.trangThai === 'CHO_XAC_NHAN' ||
+        congViec.trangThai === 'DA_XU_LY' ? (
           <View style={[styles.khuVuc, styles.ketQua]}>
             <Text style={styles.tieuDeKetQua}>Kết quả sửa chữa</Text>
+            {congViec.trangThai === 'CHO_XAC_NHAN' ? (
+              <View style={styles.baoHanh}>
+                <Text style={styles.baoHanhChu}>
+                  Đang chờ nhân viên vận hành kiểm tra và xác nhận máy hoạt động.
+                </Text>
+              </View>
+            ) : null}
             <DongThongTin nhan="Nguyên nhân" noiDung={hoSoCuoi?.nguyenNhan} />
             <DongThongTin nhan="Phương án xử lý" noiDung={hoSoCuoi?.cachXuLy} />
             <DongThongTin nhan="Ghi chú kết quả" noiDung={hoSoCuoi?.ghiChu} />

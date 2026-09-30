@@ -44,6 +44,7 @@ const NHAN_TRANG_THAI_SU_CO: Record<TrangThaiSuCo, string> = {
   DA_PHAN_CONG: 'Đã phân công',
   DANG_XU_LY: 'Đang xử lý',
   CHO_LINH_KIEN: 'Chờ linh kiện',
+  CHO_XAC_NHAN: 'Chờ xác nhận',
   DA_XU_LY: 'Hoàn thành',
   DA_HUY: 'Đã hủy',
 };
@@ -120,6 +121,8 @@ export function layMauTrangThaiSuCo(trangThai?: string) {
   switch (trangThai) {
     case 'DA_XU_LY':
       return { nen: mauSac.thanhCongNhat, chu: mauSac.thanhCong };
+    case 'CHO_XAC_NHAN':
+      return { nen: '#FEF3C7', chu: '#D97706' };
     case 'DANG_XU_LY':
     case 'DA_PHAN_CONG':
       return { nen: mauSac.thongTinNhat, chu: mauSac.thongTin };
